@@ -115,8 +115,3 @@ void classify (double number) {
         printf("Error.\n");
     }
 }
-
-int main(void) {
-    double d = 0. / 0.;
-    classify(d);
-}
