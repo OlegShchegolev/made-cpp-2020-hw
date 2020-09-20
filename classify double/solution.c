@@ -60,8 +60,8 @@ bool checkForMinusDenormal (uint64_t number) {
 }
 
 bool checkForSignalingNan (uint64_t number) {
-    uint64_t mask = 0x7FF0000000000000;
-    return ((number & mask) == mask);
+    uint64_t mask = 0x7FF8000000000000;
+    return ((number & mask) == 0x7FF0000000000000);
 }
 
 bool checkForQuietNan (uint64_t number) {
