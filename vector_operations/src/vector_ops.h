@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <math.h>
 #include <cstdint>
 
 namespace task {
@@ -47,15 +49,15 @@ std::vector<double> operator%(const std::vector<double>& lhs, const std::vector<
 }
 
 bool operator||(const std::vector<double>& lhs, const std::vector<double>& rhs){
-    double div = lhs[0] / rhs[0];
-    for (size_t i = 1; i < lhs.size(); ++i)
-        if ((lhs[i] / rhs[i] - div > 1e-8) || (lhs[i] / rhs[i] - div < -1e-8))
-            return false;
-    return true;
+    const double EPS = 1e-8;
+    double zero = abs(lhs * rhs) - sqrt(rhs * rhs) * sqrt(lhs * lhs);
+    if (zero > -EPS && zero < EPS)
+        return true;
+    return false;
 }
 
 bool operator&&(const std::vector<double>& lhs, const std::vector<double>& rhs) {
-    if ((lhs || rhs) && lhs[0] / rhs[0] >= 0)
+    if ((lhs || rhs) && (lhs * rhs) >= 0)
         return true;
     return false;
 }
@@ -77,11 +79,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<double>& v) {
 }
 
 void reverse(std::vector<double>& v) {
-    for (size_t i = 0; i < v.size() / 2; ++i) {
-        double tmp = v[i];
-        v[i] = v[v.size() - i - 1];
-        v[v.size() - i - 1] = tmp;
-    }
+    for (size_t i = 0; i < v.size() / 2; ++i)
+        std::swap(v[i], v[v.size() - i - 1]);
 }
 
 std::vector<int> operator|(const std::vector<int>& lhs, const std::vector<int>& rhs) {
