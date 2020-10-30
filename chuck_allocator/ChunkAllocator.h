@@ -1,9 +1,11 @@
+#include <cstddef>
+
 template <typename T> struct chunk {
   T *data;
-  size_t size;
-  size_t space_left;
+  std::size_t size;
+  std::size_t space_left;
   chunk *next;
-  chunk(size_t alloc_size) : size(alloc_size) {
+  chunk(std::size_t alloc_size) : size(alloc_size) {
     space_left = size;
     next = nullptr;
     data = reinterpret_cast<T *>(new char[size]);
@@ -13,7 +15,7 @@ template <typename T> struct chunk {
 
 template <typename T> class ChunkAllocator {
   const int CHUNK_SIZE = 10;
-  static size_t n;
+  std::size_t* n = nullptr;
   chunk<T> *chunk_list;
 
 public:
@@ -27,33 +29,37 @@ public:
   template <class U> struct rebind { typedef ChunkAllocator<U> other; };
 
   ChunkAllocator() {
-    ++n;
+    n = new std::size_t(1);
     chunk_list = nullptr;
   }
   ChunkAllocator(const ChunkAllocator<T> &alloc) {
     if (this != &alloc) {
-      ++n;
+      n = alloc.n;
+      ++(*n);
       chunk_list = alloc.chunk_list;
     }
   }
   ~ChunkAllocator() {
     chunk<T> *tmp;
-    --n;
-    if (n == 0) {
+    --(*n);
+    if (*n == 0) {
       while (chunk_list) {
         tmp = chunk_list->next;
         delete chunk_list;
         chunk_list = tmp;
       }
+      delete n;
     }
   }
   ChunkAllocator &operator=(const ChunkAllocator &alloc) {
     chunk_list = alloc.chunk_list;
+    n = alloc.n;
+    ++(*n);
     return *this;
   }
-  T *allocate(const size_t size) {
+  T *allocate(const std::size_t size) {
     if (!chunk_list) {
-      size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
+      std::size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
       chunk_list = new chunk<T>(alloc_size);
       chunk_list->space_left = alloc_size - size;
       return chunk_list->data;
@@ -67,7 +73,7 @@ public:
         }
         tmp = tmp->next;
       }
-      size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
+      std::size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
       chunk<T> *new_chunk = new chunk<T>(alloc_size);
       new_chunk->space_left = alloc_size - size;
       tmp = chunk_list;
@@ -77,7 +83,7 @@ public:
       return new_chunk->data;
     }
   }
-  void deallocate(T *p, size_t size) {}
+  void deallocate(T *p, std::size_t size) {}
   template <class... Args> void construct(T *p, Args &&... args) {
     new (p) T(args...);
   }
