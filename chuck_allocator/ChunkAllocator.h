@@ -1,11 +1,13 @@
-#include <cstddef>
+#include <utility>
+
+template <typename T> class ChunkAllocator;
 
 template <typename T> struct chunk {
   T *data;
-  std::size_t size;
-  std::size_t space_left;
+  typename ChunkAllocator<T>::size_type size;
+  typename ChunkAllocator<T>::size_type space_left;
   chunk *next;
-  chunk(std::size_t alloc_size) : size(alloc_size) {
+  chunk(typename ChunkAllocator<T>::size_type alloc_size) : size(alloc_size) {
     space_left = size;
     next = nullptr;
     data = reinterpret_cast<T *>(new char[size]);
@@ -59,7 +61,7 @@ public:
   }
   T *allocate(const std::size_t size) {
     if (!chunk_list) {
-      std::size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
+      auto alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
       chunk_list = new chunk<T>(alloc_size);
       chunk_list->space_left = alloc_size - size;
       return chunk_list->data;
@@ -73,7 +75,7 @@ public:
         }
         tmp = tmp->next;
       }
-      std::size_t alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
+      auto alloc_size = CHUNK_SIZE > size ? CHUNK_SIZE : size;
       chunk<T> *new_chunk = new chunk<T>(alloc_size);
       new_chunk->space_left = alloc_size - size;
       tmp = chunk_list;
@@ -85,7 +87,7 @@ public:
   }
   void deallocate(T *p, std::size_t size) {}
   template <class... Args> void construct(T *p, Args &&... args) {
-    new (p) T(args...);
+    new (p) T(std::forward<Args>(args)...);
   }
   void destroy(T *p) { p->~T(); }
 };
